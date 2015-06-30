@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+## 
+lass/lasso
+logistic_regression/logistic_regression
