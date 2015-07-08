@@ -58,6 +58,7 @@ func get_acc(p *readData.Problem) float32 {
 	return acc
 }
 
+//TODO  speed it up (liblinear)
 func solve_lr_CD(p *readData.Problem) {
 	obj_old := get_obj_lr(p)
 	fmt.Printf("obj: %f\n", obj_old)
