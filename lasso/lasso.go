@@ -5,17 +5,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	//	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	"os"
 	"time"
 )
 
 func main() {
-
+	// /home/jwh/dataset/rcv1/rcv1_train.binary
 	var train_file_name string
 	var test_file_name string
+	var lambda float64
 	flag.StringVar(&train_file_name, "train", "", "training file (libsvm format)")
 	flag.StringVar(&test_file_name, "test", "", "testing file (libsvm format)")
+	flag.Float64Var(&lambda, "lambda", 0.000001, "trade-off parameter")
 
 	if len(os.Args) <= 3 {
 		fmt.Printf("Usage: \n")
@@ -26,24 +29,21 @@ func main() {
 
 	start := time.Now()
 
-	p, _ := readData.ReadData(train_file_name)
+	p, _ := readData.ReadData(train_file_name, false)
+	p.Lambda = float32(lambda)
+	p.Epsilon = 0.0001
 	p.PrintProblem()
 	solve_lasso_CD(p)
 	elapsed := time.Since(start)
 
 	fmt.Printf("took %s \n", elapsed)
 
-	p_test, _ := readData.ReadData(train_file_name)
+	p_test, _ := readData.ReadData(test_file_name, false)
 	p_test.X = p.X
-	fmt.Printf("testing...")
+	fmt.Printf("testing...\n")
 	loss_test := get_acc_as_reg(p_test)
-	fmt.Printf("testing error: %e", loss_test)
+	fmt.Printf("testing error: %e\n", loss_test)
 }
-
-//func obj_lasso(p *readData.Problem) {
-//	var obj1 float32
-
-//}
 
 func abs(a float32) float32 {
 	if a > 0 {
@@ -57,7 +57,8 @@ func get_acc_as_reg(p *readData.Problem) float32 {
 	var loss float32
 	for i := 0; i < p.L; i++ {
 		pred := p.A_rows[i].Multiply_dense_array(p.X)
-		loss = loss + pred*pred
+		diff := pred - float32(p.Labels[i])
+		loss = loss + diff*diff
 	}
 	loss = loss / float32(p.L)
 	return loss
@@ -91,28 +92,6 @@ func soft_threshold(a float32, lambda float32) float32 {
 	return r
 }
 
-func array_prod(a []float32, b []float32) float32 {
-	var r float32
-	r = 0
-	for i := 0; i < len(a); i++ {
-		r = r + a[i] + b[i]
-	}
-	return r
-}
-
-// a_i = a_i + b_i
-func array_add(a []float32, b []float32) {
-	for i := 0; i < len(a); i++ {
-		a[i] = a[i] + b[i]
-	}
-}
-
-// a_i = a_i + b
-func array_add_scalar(a []float32, b float32) {
-	for i := 0; i < len(a); i++ {
-		a[i] = a[i] + b
-	}
-}
 func update_residual(residual []float32, z []float32, p *readData.Problem, n int) {
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
