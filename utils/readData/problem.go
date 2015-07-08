@@ -126,6 +126,17 @@ func (v *SparseVector) Multiply_dense_array(a []float32) float32 {
 	return r
 }
 
+//r = v^T diag(w) a
+func (v *SparseVector) Multiply_dense_array_weithted(a []float32, w []float32) float32 {
+	var r float32
+	r = 0
+
+	for i := 0; i < len(v.Values); i++ {
+		r = r + v.Values[i]*a[v.Idxs[i]]*w[v.Idxs[i]]
+	}
+	return r
+}
+
 func (sv *SparseVector) getString() string {
 	var str string
 	for i := 0; i < len(sv.Idxs); i++ {

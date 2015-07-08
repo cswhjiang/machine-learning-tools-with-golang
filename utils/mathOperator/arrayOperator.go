@@ -22,3 +22,10 @@ func Array_add_scalar(a []float32, b float32) {
 		a[i] = a[i] + b
 	}
 }
+
+// a_i = a_i * b
+func Array_multiply_scalar(a []float32, b float32) {
+	for i := 0; i < len(a); i++ {
+		a[i] = a[i] * b
+	}
+}
