@@ -151,6 +151,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 	}
 	//	fmt.Printf("%v ", fea_square)
 	obj_old := get_obj(p, u, w)
+	fmt.Printf("    inner obj: %f\n", obj_old)
 	var iter int
 	for iter = 1; iter < 100; iter++ {
 		for n := 0; n < p.N; n++ {
@@ -160,6 +161,9 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 			weighted_lasso_update_residual(residual, z, p, n)
 		}
 		obj_new := get_obj(p, u, w)
+		if obj_new > obj_old {
+			fmt.Printf("    wrong\n")
+		}
 		fmt.Printf("    inner obj: %f\n", obj_new)
 		if mathOperator.Abs(obj_new-obj_old) < 0.000001 {
 			break
