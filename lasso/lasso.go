@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	//	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	"os"
 	"time"
@@ -45,14 +45,6 @@ func main() {
 	fmt.Printf("testing error: %e\n", loss_test)
 }
 
-func abs(a float32) float32 {
-	if a > 0 {
-		return a
-	} else {
-		return -a
-	}
-}
-
 func get_acc_as_reg(p *readData.Problem) float32 {
 	var loss float32
 	for i := 0; i < p.L; i++ {
@@ -77,7 +69,7 @@ func get_obj(p *readData.Problem) float32 {
 	}
 	loss = loss / float32(p.L) / 2.0
 	for i := 0; i < p.N; i++ {
-		l1 = l1 + abs(p.X[i])
+		l1 = l1 + mathOperator.Abs(p.X[i])
 	}
 	return loss + l1*p.Lambda
 }
@@ -126,12 +118,12 @@ func solve_lasso_CD(p *readData.Problem) {
 		for n := 0; n < p.N; n++ {
 			update_z(z, residual, p, n)
 			temp := p.A_cols[n].Multiply_dense_array(z) / fea_square[n]
-			p.X[n] = soft_threshold(temp, float32(p.L)*p.Lambda)
+			p.X[n] = soft_threshold(temp, float32(p.L)*p.Lambda/fea_square[n])
 			update_residual(residual, z, p, n)
 		}
 		obj_new := get_obj(p)
 		fmt.Printf("obj: %f\n", obj_new)
-		if abs(obj_new-obj_old) < p.Epsilon {
+		if mathOperator.Abs(obj_new-obj_old) < p.Epsilon {
 			break
 		}
 		obj_old = obj_new

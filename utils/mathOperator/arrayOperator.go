@@ -1,6 +1,6 @@
 package mathOperator
 
-func array_prod(a []float32, b []float32) float32 {
+func Array_inner_prod(a []float32, b []float32) float32 {
 	var r float32
 	r = 0
 	for i := 0; i < len(a); i++ {
@@ -10,14 +10,14 @@ func array_prod(a []float32, b []float32) float32 {
 }
 
 // a_i = a_i + b_i
-func array_add(a []float32, b []float32) {
+func Array_add(a []float32, b []float32) {
 	for i := 0; i < len(a); i++ {
 		a[i] = a[i] + b[i]
 	}
 }
 
 // a_i = a_i + b
-func array_add_scalar(a []float32, b float32) {
+func Array_add_scalar(a []float32, b float32) {
 	for i := 0; i < len(a); i++ {
 		a[i] = a[i] + b
 	}

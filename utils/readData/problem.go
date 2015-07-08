@@ -58,9 +58,13 @@ type SparseVector struct {
 	//	dim    int //dimensionality or length, no use for now
 }
 
-//func (s *SparseVector) length() int {
-//	return s.dim
-//}
+func (s *SparseVector) Make_a_copy() *SparseVector {
+	t := new(SparseVector)
+	for i := 0; i < len(s.Idxs); i++ {
+		t.add_element(s.Idxs[i], s.Values[i])
+	}
+	return t
+}
 
 func (sv *SparseVector) add_element(index int, value float32) {
 	sv.Idxs = append(sv.Idxs, index)
@@ -75,7 +79,16 @@ func (v *SparseVector) Add_scalar(a float32) {
 	}
 }
 
-// v = v.*a
+// u = v.*a
+func (v *SparseVector) Dot_product(a []float32) *SparseVector {
+	u := v.Make_a_copy()
+	for i := 0; i < len(v.Values); i++ {
+		u.Values[i] = v.Values[i] * a[v.Idxs[i]]
+	}
+	return u
+}
+
+// v = v*a
 func (v *SparseVector) Multiply_scalar(a float32) {
 	for i := 0; i < len(v.Values); i++ {
 		v.Values[i] = v.Values[i] * a
