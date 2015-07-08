@@ -29,3 +29,13 @@ func Array_multiply_scalar(a []float32, b float32) {
 		a[i] = a[i] * b
 	}
 }
+
+// s  = a_0 + a_1 + .. a_n
+func Array_sum(a []float32) float32 {
+	var s float32
+	s = 0
+	for i := 0; i < len(a); i++ {
+		s = s + a[i]
+	}
+	return s
+}

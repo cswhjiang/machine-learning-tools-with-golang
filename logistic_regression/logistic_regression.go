@@ -41,18 +41,31 @@ func main() {
 	p_test, _ := readData.ReadData(train_file_name, true)
 	p_test.X = p.X
 	fmt.Printf("testing...")
-	//	loss_test := get_acc_as_reg(p_test)
-	//	fmt.Printf("testing error: %e", loss_test)
+	loss_test := get_acc(p_test)
+	fmt.Printf("acc: %f\n", loss_test)
 }
 
-//TODO  not converge
+func get_acc(p *readData.Problem) float32 {
+	var acc float32
+	acc = 0
+	for i := 0; i < p.L; i++ {
+		pred := p.A_rows[i].Multiply_dense_array(p.X)
+		if float32(p.Labels[i])*pred > 0 {
+			acc = acc + 1.0
+		}
+	}
+	acc = acc / float32(p.L) * 100.0
+	return acc
+}
+
 func solve_lr_CD(p *readData.Problem) {
 	obj_old := get_obj_lr(p)
+	fmt.Printf("obj: %f\n", obj_old)
 	for i := 0; i < p.Max_iter; i++ {
 		u, w := get_u_and_w(p)
 		solve_weighted_lasso_CD(p, u, w)
 		obj_new := get_obj_lr(p)
-		fmt.Printf("obj: %f\n", obj_old)
+		fmt.Printf("obj: %f\n", obj_new)
 		if mathOperator.Abs(obj_new-obj_old) < 0.000001 {
 			break
 		}
@@ -75,19 +88,19 @@ func get_obj_lr(p *readData.Problem) float32 {
 	return loss + l1*p.Lambda
 }
 func get_u_and_w(p *readData.Problem) ([]float32, []float32) {
-	z := make([]float32, p.L)
+	//	z := make([]float32, p.L)
 	w := make([]float32, p.L)
 	u := make([]float32, p.L)
 	for i := 0; i < p.L; i++ {
 		pi := 1.0 / (1.0 + float32(math.Exp(float64(p.A_rows[i].Multiply_dense_array(p.X)*float32(-p.Labels[i])))))
-		z[i] = float32(p.Labels[i]) * (1.0 - pi) / float32(p.L) // can be zero
-		w[i] = pi * (1.0 - pi) / float32(p.L)                   // can be zero
-		if w[i] > 1e-8 {
-			u[i] = p.A_rows[i].Multiply_dense_array(p.X) + z[i]/w[i]
-		} else {
-			u[i] = p.A_rows[i].Multiply_dense_array(p.X)
-		}
-
+		//		z[i] = float32(p.Labels[i]) * (1.0 - pi) / float32(p.L) // can be zero
+		w[i] = pi * (1.0 - pi) / float32(p.L) // can be zero
+		//		if w[i] > 1e-9 {
+		//			u[i] = p.A_rows[i].Multiply_dense_array(p.X) + z[i]/w[i]
+		//		} else {
+		//			u[i] = p.A_rows[i].Multiply_dense_array(p.X)
+		//		}
+		u[i] = p.A_rows[i].Multiply_dense_array(p.X) + float32(p.Labels[i])/pi
 	}
 	return u, w
 }
@@ -119,6 +132,10 @@ func soft_threshold(a float32, lambda float32) float32 {
 
 // r = u- A*x and it is updated by r = z-A_nx_n
 func weighted_lasso_update_residual(residual []float32, z []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		residual[i] = z[i]
+	//	}
+	copy(residual, z)
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		residual[index] = z[index] - p.A_cols[n].Values[i]*p.X[n]
@@ -127,6 +144,10 @@ func weighted_lasso_update_residual(residual []float32, z []float32, p *readData
 
 // z = u - (A*x-A_nx_n) = u - A*x + A_nx_n = r + A_nx_n
 func weighted_lasso_update_z(z []float32, residual []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		z[i] = residual[i]
+	//	}
+	copy(z, residual) // slow
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		z[index] = residual[index] + p.A_cols[n].Values[i]*p.X[n]
@@ -136,13 +157,13 @@ func weighted_lasso_update_z(z []float32, residual []float32, p *readData.Proble
 // using CD to solve weigthed lasso
 //compute x_i while fixing the other variable
 func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
-
 	//initial pred is zeros, since x is zero vector, hence the residual is just the label vector
 	residual := make([]float32, p.L)
 	z := make([]float32, p.L)
 	for i := 0; i < p.L; i++ {
-		residual[i] = u[i]
+		residual[i] = u[i] - p.A_rows[i].Multiply_dense_array(p.X)
 	}
+	//	copy(z, residual)
 	//	pred := make([]float32, p.L)
 	fea_weithed_norm := make([]float32, p.N) // time consuming
 	for i := 0; i < p.N; i++ {
@@ -157,7 +178,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 		for n := 0; n < p.N; n++ {
 			weighted_lasso_update_z(z, residual, p, n)
 			temp := p.A_cols[n].Multiply_dense_array_weithted(z, w) / fea_weithed_norm[n]
-			p.X[n] = soft_threshold(temp, p.Lambda/fea_weithed_norm[n])
+			p.X[n] = soft_threshold(temp, p.Lambda/fea_weithed_norm[n]/2.0)
 			weighted_lasso_update_residual(residual, z, p, n)
 		}
 		obj_new := get_obj(p, u, w)
@@ -165,7 +186,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 			fmt.Printf("    wrong\n")
 		}
 		fmt.Printf("    inner obj: %f\n", obj_new)
-		if mathOperator.Abs(obj_new-obj_old) < 0.000001 {
+		if mathOperator.Abs(obj_new-obj_old) < 0.0001 {
 			break
 		}
 		obj_old = obj_new

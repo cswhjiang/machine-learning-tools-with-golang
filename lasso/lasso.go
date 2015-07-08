@@ -84,13 +84,24 @@ func soft_threshold(a float32, lambda float32) float32 {
 	return r
 }
 
+// r = u- A*x and it is updated by r = z-A_nx_n
 func update_residual(residual []float32, z []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		residual[i] = z[i]
+	//	}
+	copy(residual, z)
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		residual[index] = z[index] - p.A_cols[n].Values[i]*p.X[n]
 	}
 }
+
+// z = y - (A*x-A_nx_n) = y - A*x + A_nx_n = y + A_nx_n
 func update_z(z []float32, residual []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		z[i] = residual[i]
+	//	}
+	copy(z, residual)
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		z[index] = residual[index] + p.A_cols[n].Values[i]*p.X[n]
@@ -106,6 +117,7 @@ func solve_lasso_CD(p *readData.Problem) {
 	for i := 0; i < p.L; i++ {
 		residual[i] = float32(p.Labels[i])
 	}
+	copy(z, residual)
 	//	pred := make([]float32, p.L)
 	fea_square := make([]float32, p.N)
 	for i := 0; i < p.N; i++ {

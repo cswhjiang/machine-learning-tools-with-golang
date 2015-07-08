@@ -45,7 +45,7 @@ func (d *DenseVector) Multiply_sparse_vector(a *SparseVector) float32 {
 	r = 0
 
 	for i := 0; i < len(a.Values); i++ {
-		r = r + d.Values[i]*a.Values[i]
+		r = r + d.Values[a.Idxs[i]]*a.Values[i]
 	}
 	return r
 }
