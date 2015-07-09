@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("logistic_regression only support binary classification for now\n")
+	fmt.Printf("logistic_regression only supports binary classification for now\n")
 
 	var train_file_name string
 	var test_file_name string
@@ -46,7 +46,6 @@ func main() {
 	p, _ := readData.ReadData(train_file_name, true)
 	elapsed_reading := time.Since(start)
 	fmt.Printf("took %s to read data \n", elapsed_reading)
-	os.Exit(1)
 	p.PrintProblem()
 	p.Lambda = float32(lambda)
 	p.Epsilon = 0.0001
