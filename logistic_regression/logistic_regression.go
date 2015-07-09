@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
+	"log"
 	"math"
 	"os"
+	"runtime/pprof"
 	"time"
 )
 
@@ -20,6 +22,7 @@ func main() {
 	flag.StringVar(&train_file_name, "train", "", "training file (libsvm format)")
 	flag.StringVar(&test_file_name, "test", "", "testing file (libsvm format)")
 	flag.Float64Var(&lambda, "lambda", 0.000001, "trade-off parameter")
+	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	if len(os.Args) <= 3 {
 		fmt.Printf("Usage: \n")
@@ -28,19 +31,29 @@ func main() {
 	}
 	flag.Parse()
 
+	//for profiling
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	start := time.Now()
 
 	p, _ := readData.ReadData(train_file_name, true)
 	elapsed_reading := time.Since(start)
 	fmt.Printf("took %s to read data \n", elapsed_reading)
-
+	os.Exit(1)
 	p.PrintProblem()
 	p.Lambda = float32(lambda)
 	p.Epsilon = 0.0001
 	solve_lr_CD(p)
 	elapsed := time.Since(start)
 
-	fmt.Printf("took %s \n", elapsed)
+	fmt.Printf("took %s total\n", elapsed)
 
 	p_test, _ := readData.ReadData(train_file_name, true)
 	p_test.X = p.X
