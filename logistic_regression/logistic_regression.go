@@ -31,6 +31,9 @@ func main() {
 	start := time.Now()
 
 	p, _ := readData.ReadData(train_file_name, true)
+	elapsed_reading := time.Since(start)
+	fmt.Printf("took %s to read data \n", elapsed_reading)
+
 	p.PrintProblem()
 	p.Lambda = float32(lambda)
 	p.Epsilon = 0.0001
