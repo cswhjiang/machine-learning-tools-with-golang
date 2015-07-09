@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	fmt.Printf("logistic_regression only support binary classification for now")
+	fmt.Printf("logistic_regression only support binary classification for now\n")
+
 	var train_file_name string
 	var test_file_name string
 	var lambda float64
@@ -136,7 +137,7 @@ func weighted_lasso_update_residual(residual []float32, z []float32, p *readData
 	//	for i := 0; i < len(residual); i++ {
 	//		residual[i] = z[i]
 	//	}
-	copy(residual, z)
+	//	copy(residual, z)
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		residual[index] = z[index] - p.A_cols[n].Values[i]*p.X[n]
@@ -148,7 +149,7 @@ func weighted_lasso_update_z(z []float32, residual []float32, p *readData.Proble
 	//	for i := 0; i < len(residual); i++ {
 	//		z[i] = residual[i]
 	//	}
-	copy(z, residual) // slow
+	//	copy(z, residual) // slow
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
 		z[index] = residual[index] + p.A_cols[n].Values[i]*p.X[n]
@@ -164,7 +165,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 	for i := 0; i < p.L; i++ {
 		residual[i] = u[i] - p.A_rows[i].Multiply_dense_array(p.X)
 	}
-	//	copy(z, residual)
+	copy(z, residual) // can  also be deleted
 	//	pred := make([]float32, p.L)
 	fea_weithed_norm := make([]float32, p.N) // time consuming
 	for i := 0; i < p.N; i++ {
@@ -178,6 +179,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 	for iter = 1; iter < 100; iter++ {
 		for n := 0; n < p.N; n++ {
 			weighted_lasso_update_z(z, residual, p, n)
+			//only nonzeros entries of z are used
 			temp := p.A_cols[n].Multiply_dense_array_weithted(z, w) / fea_weithed_norm[n]
 			p.X[n] = soft_threshold(temp, p.Lambda/fea_weithed_norm[n]/2.0)
 			weighted_lasso_update_residual(residual, z, p, n)
