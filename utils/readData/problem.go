@@ -50,6 +50,9 @@ func (d *DenseVector) Multiply_sparse_vector(a *SparseVector) float32 {
 	return r
 }
 
+/*****************************************************
+************		sparse vector    ********************
+******************************************************/
 //sparse vector
 type SparseVector struct {
 	Idxs   []int //index are sorted
@@ -60,15 +63,24 @@ type SparseVector struct {
 
 func (s *SparseVector) Make_a_copy() *SparseVector {
 	t := new(SparseVector)
+	t.reserve(len(s.Idxs))
 	for i := 0; i < len(s.Idxs); i++ {
-		t.add_element(s.Idxs[i], s.Values[i])
+		t.add_element(s.Idxs[i], s.Values[i], i)
 	}
 	return t
 }
 
-func (sv *SparseVector) add_element(index int, value float32) {
-	sv.Idxs = append(sv.Idxs, index)
-	sv.Values = append(sv.Values, value)
+func (sv *SparseVector) reserve(n int) {
+	sv.Idxs = make([]int, n)
+	sv.Values = make([]float32, n)
+	//	sv.nnz = sv.nnz + 1
+}
+
+func (sv *SparseVector) add_element(index int, value float32, position int) {
+	//	sv.Idxs = append(sv.Idxs, index)
+	//	sv.Values = append(sv.Values, value)
+	sv.Idxs[position] = index
+	sv.Values[position] = value
 	//	sv.nnz = sv.nnz + 1
 }
 
@@ -172,7 +184,7 @@ type Problem struct {
 	NumClass         int  //only defined if isClassification == true
 }
 
-func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool) {
+func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool, row_element_array []int, col_element_array []int) {
 	p.L = num_sample
 	p.N = num_feature
 	p.Size = 0
@@ -185,13 +197,21 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	p.Epsilon = 0.001
 	p.IsClassification = isClassification
 	p.NumClass = 2 //we consider binary classifition by default
+
+	// reserve space for A_cols and A_rows
+	for i := 0; i < len(row_element_array); i++ {
+		p.A_rows[i].reserve(row_element_array[i])
+	}
+	for i := 0; i < len(col_element_array); i++ {
+		p.A_cols[i].reserve(col_element_array[i])
+	}
 }
 
-func (p *Problem) addNode(y int, sample_index int, feature_index int, value float32) {
+func (p *Problem) addNode(y int, sample_index int, feature_index int, value float32, row_position int, col_position int) {
 	//	fmt.Printf("add node: %d %d %f\n", sample_index, feature_index, value)
 	p.Labels[sample_index] = y
-	p.A_cols[feature_index].add_element(sample_index, value)
-	p.A_rows[sample_index].add_element(feature_index, value)
+	p.A_cols[feature_index].add_element(sample_index, value, col_position)
+	p.A_rows[sample_index].add_element(feature_index, value, row_position)
 	p.Size = p.Size + 1
 }
 
