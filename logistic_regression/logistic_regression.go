@@ -50,7 +50,7 @@ func main() {
 
 	p.PrintProblem()
 	p.Lambda = float32(lambda)
-	p.Epsilon = 0.0001
+	p.Epsilon = 0.001
 
 	start = time.Now()
 	//	solve_lr_CD(p)
@@ -58,7 +58,6 @@ func main() {
 	elapsed = time.Since(start)
 	fmt.Printf("took %s to train \n", elapsed)
 
-	return
 	start = time.Now()
 	p_test, _ := readData.ReadData(train_file_name, true)
 	p_test.X = p.X

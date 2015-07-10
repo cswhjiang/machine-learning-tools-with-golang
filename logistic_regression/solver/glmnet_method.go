@@ -23,7 +23,7 @@ func Solve_lr_CD(p *readData.Problem) {
 		if i%10 == 0 {
 			fmt.Printf("iter: %d, obj: %f\n", i, obj_new)
 		}
-		if mathOperator.Abs(obj_new-obj_old) < 0.000001 {
+		if mathOperator.Abs(obj_new-obj_old) < p.Epsilon*obj_old {
 			break
 		}
 		obj_old = obj_new
@@ -115,6 +115,29 @@ func weighted_lasso_update_z(z []float32, residual []float32, p *readData.Proble
 		z[index] = residual[index] + p.A_cols[n].Values[i]*p.X[n]
 	}
 }
+
+func weighted_lasso_update_z_0(z []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		z[i] = residual[i]
+	//	}
+	//	copy(z, residual) // slow
+	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
+		index := p.A_cols[n].Idxs[i]
+		z[index] = z[index] + p.A_cols[n].Values[i]*p.X[n]
+	}
+}
+
+func weighted_lasso_update_z_1(z []float32, p *readData.Problem, n int) {
+	//	for i := 0; i < len(residual); i++ {
+	//		z[i] = residual[i]
+	//	}
+	//	copy(z, residual) // slow
+	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
+		index := p.A_cols[n].Idxs[i]
+		z[index] = z[index] - p.A_cols[n].Values[i]*p.X[n]
+	}
+}
+
 func update_Ax(p *readData.Problem, x_old float32, x_new float32, n int) {
 	for i := 0; i < len(p.A_cols[n].Idxs); i++ {
 		index := p.A_cols[n].Idxs[i]
@@ -147,19 +170,21 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 	for iter = 1; iter < 100; iter++ {
 		for n := 0; n < p.N; n++ {
 			weighted_lasso_update_z(z, residual, p, n)
+			//			weighted_lasso_update_z_0(z, p, n)
 			//only nonzeros entries of z are used
 			temp := p.A_cols[n].Multiply_dense_array_weithted(z, w) / fea_weithed_norm[n]
 			x_new := soft_threshold(temp, p.Lambda/fea_weithed_norm[n]/2.0)
 			update_Ax(p, p.X[n], x_new, n)
 			p.X[n] = x_new
 			weighted_lasso_update_residual(residual, z, p, n)
+			//			weighted_lasso_update_z_1(z, p, n)
 		}
 		obj_new := get_obj(p, u, w)
 		if obj_new > obj_old {
 			fmt.Printf("    wrong\n")
 		}
 		//		fmt.Printf("    inner obj: %f\n", obj_new)
-		if mathOperator.Abs(obj_new-obj_old) < 0.0001 {
+		if mathOperator.Abs(obj_new-obj_old) < 0.1*obj_old {
 			break
 		}
 		obj_old = obj_new
