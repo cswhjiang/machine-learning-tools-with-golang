@@ -36,6 +36,7 @@ func ReadData(fileName string, isClassification bool) (*Problem, error) { //fast
 		line := scanner.Text()
 		num_sample++
 		nodes := strings.Split(line, " ")
+		//		nodes := strings.Fields(line)
 		num_nodes = num_nodes + len(nodes)
 		row_element_array = append(row_element_array, len(nodes)-1)
 		for i := 1; i < len(nodes); i++ {

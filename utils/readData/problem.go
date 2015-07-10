@@ -171,8 +171,8 @@ type Problem struct {
 	Labels []int          //label
 	A_rows []SparseVector //rows
 	A_cols []SparseVector //columns. Redundant.
-
-	X []float32 //parameter
+	Ax     []float32      //Ax =A*x
+	X      []float32      //parameter
 	//	b    float32 // do not consider bias term for now
 	Size int // number of nodes(non-zero elements)
 
@@ -190,6 +190,7 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	p.Size = 0
 	p.A_cols = make([]SparseVector, num_feature)
 	p.A_rows = make([]SparseVector, num_sample)
+	p.Ax = make([]float32, num_sample)
 	p.X = make([]float32, num_feature)
 	p.Labels = make([]int, num_sample)
 	p.Max_iter = 100
