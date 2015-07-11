@@ -184,7 +184,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 			fmt.Printf("    wrong\n")
 		}
 		//		fmt.Printf("    inner obj: %f\n", obj_new)
-		if mathOperator.Abs(obj_new-obj_old) < 0.1*obj_old {
+		if mathOperator.Abs(obj_new-obj_old) < 0.1*obj_old { //!!
 			break
 		}
 		obj_old = obj_new
