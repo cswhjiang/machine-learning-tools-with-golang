@@ -1,4 +1,4 @@
-package mathOperator
+package mathOp
 
 func Array_inner_prod(a []float32, b []float32) float32 {
 	var r float32

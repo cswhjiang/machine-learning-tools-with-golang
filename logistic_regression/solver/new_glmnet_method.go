@@ -3,7 +3,7 @@ package solver
 import (
 	//	"flag"
 	"fmt"
-	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOp"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	//	"log"
 	"math"
@@ -24,23 +24,69 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 				continue
 			}
 			g_j, H_jj := get_g_j_and_H_jj(p, j)
-			if H_jj < 1e-8 || math.Abs(float64(g_j)) < 1e-8 {
+			if H_jj < 1e-8 || mathOp.Abs(g_j) < 1e-8 {
 				continue
 			}
 
 			d := update_d(g_j, H_jj, p.X[j], p.Lambda)
-			if math.Abs(float64(d)) < 1e-8 {
+			if mathOp.Abs(d) < 1e-8 {
 				continue
 			}
 			//			fmt.Printf("j: %d    g_j = %f, H_jj = %f, d=%f\n", j, g_j, H_jj, d)
-			loss_old := get_obj_lr(p)
+			//			loss_old := get_obj_lr(p)
 			var r float32
 			r = 1.0
-			right_hand_size := g_j*d + p.Lambda*float32(math.Abs(float64(p.X[j]+d))-math.Abs(float64(p.X[j])))
+			right_hand_size := g_j*d + p.Lambda*(mathOp.Abs(p.X[j]+d)-mathOp.Abs(p.X[j]))
+
+			//compute upper bound of left hand side of (45)
+			var upper_1 float32
+			var upper_2 float32
+			var upper float32
+			var s1 float32
+			var s2 float32
+			var ss1 float32
+			var ss2 float32
+			var s_y_1 float32
+			var s_y_0 float32 //for label -1
+			var ss_y_1 float32
+			var ss_y_0 float32
+
+			for i := 0; i < len(p.A_cols[j].Idxs); i++ {
+				sample_index := p.A_cols[j].Idxs[i]
+				s1 = s1 + p.A_cols[j].Values[i]/(1.0+(mathOp.Exp(p.Ax[sample_index])))
+				s2 = s2 + p.A_cols[j].Values[i]/(1.0+(mathOp.Exp(-p.Ax[sample_index])))
+				if p.Labels[sample_index] == 1 {
+					s_y_1 = s_y_1 + p.A_cols[j].Values[i]
+				} else {
+					s_y_0 = s_y_0 + p.A_cols[j].Values[i]
+				}
+			}
+			s1 = s1 / float32(p.L)
+			s2 = s2 / float32(p.L)
+			//			s_y_0 = s_y_0 / float32(p.L)
+			//			s_y_1 = s_y_1 / float32(p.L)
 			for {
 				//				loss_new := get_obj_with_d(p, d, j, r) //expensive
-				loss_new := get_upper_bound(p, d*r, j)
-				if loss_new-loss_old < sigma*r*right_hand_size {
+				//				loss_new := get_upper_bound(p, d*r, j)
+				ss1 = s1 * (mathOp.Exp(-d*r*p.Xj_max[j]) - 1.0)
+				ss1 = ss1 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
+				upper_1 = float32(p.Size) / float32(p.L) * mathOp.Log(1.0+ss1)
+				ss_y_0 = d*r*s_y_0/float32(p.L) + p.Lambda*(mathOp.Abs(p.X[j]+d*r)-mathOp.Abs(p.X[j]))
+				upper_1 = upper_1 + ss_y_0
+
+				ss2 = s2 * (mathOp.Exp(d*r*p.Xj_max[j]) - 1.0)
+				ss2 = ss2 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
+				upper_2 = float32(p.Size) / float32(p.L) * mathOp.Log(1.0+ss2)
+				ss_y_1 = -d*r*s_y_1/float32(p.L) + p.Lambda*(mathOp.Abs(p.X[j]+d*r)-mathOp.Abs(p.X[j]))
+				upper_2 = upper_2 + ss_y_1
+
+				if upper_1 < upper_2 {
+					upper = upper_1
+				} else {
+					upper = upper_2
+				}
+
+				if upper < sigma*r*right_hand_size {
 					break
 				}
 				r = r * lambda
@@ -60,7 +106,7 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 		//		if i%10 == 0 {
 		fmt.Printf("iter: %d, obj: %f\n", i, obj_new)
 		//		}
-		if mathOperator.Abs(obj_new-obj_old) < p.Epsilon*obj_old {
+		if mathOp.Abs(obj_new-obj_old) < p.Epsilon*obj_old {
 			break
 		}
 		obj_old = obj_new
@@ -82,9 +128,10 @@ func get_upper_bound(p *readData.Problem, dr float32, j int) float32 {
 		if p.Labels[sample_index] == 1 {
 			s_y_1 = s_y_1 + p.A_cols[j].Values[i]
 		} else {
-			s_y_0 = s_y_1 + p.A_cols[j].Values[i]
+			s_y_0 = s_y_0 + p.A_cols[j].Values[i]
 		}
 	}
+	s_y_0 = s_y_0 / float32(p.L)
 	s1 = s1 / float32(p.L)
 	s1 = s1 * float32(math.Exp(float64(-dr*p.Xj_max[j]))-1.0)
 	s1 = s1 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
@@ -92,10 +139,11 @@ func get_upper_bound(p *readData.Problem, dr float32, j int) float32 {
 	s_y_0 = dr*s_y_0/float32(p.L) + p.Lambda*(float32(math.Abs(float64(p.X[j]+dr))-math.Abs(float64(p.X[j]))))
 	upper_1 = upper_1 + s_y_0
 
+	s_y_1 = s_y_1 / float32(p.L)
 	s2 = s2 / float32(p.L)
 	s2 = s2 * float32(math.Exp(float64(dr*p.Xj_max[j]))-1.0)
-	s1 = s1 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
-	upper_2 = float32(p.Size) / float32(p.L) * float32(math.Log(float64(1.0+s1)))
+	s2 = s2 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
+	upper_2 = float32(p.Size) / float32(p.L) * float32(math.Log(float64(1.0+s2)))
 	s_y_1 = -dr*s_y_1/float32(p.L) + p.Lambda*(float32(math.Abs(float64(p.X[j]+dr))-math.Abs(float64(p.X[j]))))
 	upper_2 = upper_2 + s_y_1
 

@@ -1,4 +1,4 @@
-package mathOperator
+package mathOp
 
 import (
 	"math"

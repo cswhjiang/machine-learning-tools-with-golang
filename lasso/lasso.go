@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOp"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	"os"
 	"time"
@@ -69,7 +69,7 @@ func get_obj(p *readData.Problem) float32 {
 	}
 	loss = loss / float32(p.L) / 2.0
 	for i := 0; i < p.N; i++ {
-		l1 = l1 + mathOperator.Abs(p.X[i])
+		l1 = l1 + mathOp.Abs(p.X[i])
 	}
 	return loss + l1*p.Lambda
 }
@@ -135,7 +135,7 @@ func solve_lasso_CD(p *readData.Problem) {
 		}
 		obj_new := get_obj(p)
 		fmt.Printf("obj: %f\n", obj_new)
-		if mathOperator.Abs(obj_new-obj_old) < p.Epsilon {
+		if mathOp.Abs(obj_new-obj_old) < p.Epsilon {
 			break
 		}
 		obj_old = obj_new

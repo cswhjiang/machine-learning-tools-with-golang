@@ -3,7 +3,7 @@ package solver
 import (
 	//	"flag"
 	"fmt"
-	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOp"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	//	"log"
 	"math"
@@ -23,7 +23,7 @@ func Solve_lr_CD(p *readData.Problem) {
 		if i%10 == 0 {
 			fmt.Printf("iter: %d, obj: %f\n", i, obj_new)
 		}
-		if mathOperator.Abs(obj_new-obj_old) < p.Epsilon*obj_old {
+		if mathOp.Abs(obj_new-obj_old) < p.Epsilon*obj_old {
 			break
 		}
 		obj_old = obj_new
@@ -40,7 +40,7 @@ func get_obj_lr(p *readData.Problem) float32 {
 	loss = loss / float32(p.L)
 	var l1 float32
 	for i := 0; i < p.N; i++ {
-		l1 = l1 + mathOperator.Abs(p.X[i])
+		l1 = l1 + mathOp.Abs(p.X[i])
 	}
 	return loss + l1*p.Lambda
 }
@@ -77,7 +77,7 @@ func get_obj(p *readData.Problem, u []float32, w []float32) float32 {
 		loss = loss + t*t*w[i]
 	}
 	for i := 0; i < p.N; i++ {
-		l1 = l1 + mathOperator.Abs(p.X[i])
+		l1 = l1 + mathOp.Abs(p.X[i])
 	}
 	return loss + l1*p.Lambda
 }
@@ -184,7 +184,7 @@ func solve_weighted_lasso_CD(p *readData.Problem, u []float32, w []float32) {
 			fmt.Printf("    wrong\n")
 		}
 		//		fmt.Printf("    inner obj: %f\n", obj_new)
-		if mathOperator.Abs(obj_new-obj_old) < 0.1*obj_old { //!!
+		if mathOp.Abs(obj_new-obj_old) < 0.1*obj_old { //!!
 			break
 		}
 		obj_old = obj_new
