@@ -53,12 +53,12 @@ func main() {
 	p.Epsilon = 0.001
 
 	start = time.Now()
-	//	solver.Solve_lr_CD(p)                     // glmnet method
+	//	solver.Solve_lr_CD(p) // glmnet method
 	var sigma float32
 	var r float32
 	sigma = 0.8
 	r = 0.8
-	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET, too slow for now
+	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET
 	elapsed = time.Since(start)
 	fmt.Printf("took %s to train \n", elapsed)
 
