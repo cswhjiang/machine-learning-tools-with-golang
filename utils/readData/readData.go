@@ -84,6 +84,7 @@ func ReadData(fileName string, isClassification bool) (*Problem, error) { //fast
 		nodes := strings.Split(line, " ")
 
 		label_current, _ := strconv.Atoi(nodes[0])
+		prob.addNode_of_label(label_current, sample_index)
 		for i := 1; i < len(nodes); i++ {
 			node_str_array := strings.Split(nodes[i], ":")
 			feature_index_str := node_str_array[0]
@@ -96,7 +97,7 @@ func ReadData(fileName string, isClassification bool) (*Problem, error) { //fast
 			value, _ := strconv.ParseFloat(value_str, 32)
 			row_position := row_position_array[sample_index]
 			col_position := col_position_array[feature_index-1]
-			prob.addNode(label_current, sample_index, feature_index-1, float32(value), row_position, col_position)
+			prob.addNode_of_A(sample_index, feature_index-1, float32(value), row_position, col_position)
 			row_position_array[sample_index] = row_position + 1
 			col_position_array[feature_index-1] = col_position + 1
 		}

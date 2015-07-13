@@ -38,7 +38,8 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 			r = 1.0
 			right_hand_size := g_j*d + p.Lambda*float32(math.Abs(float64(p.X[j]+d))-math.Abs(float64(p.X[j])))
 			for {
-				loss_new := get_obj_with_d(p, d, j, r)
+				//				loss_new := get_obj_with_d(p, d, j, r) //expensive
+				loss_new := get_upper_bound(p, d*r, j)
 				if loss_new-loss_old < sigma*r*right_hand_size {
 					break
 				}
@@ -46,8 +47,8 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 				//				fmt.Printf("r=%f\n", r)
 			}
 			//			fmt.Printf("j: %d    g_j = %f, H_jj = %f, d=%f\n", j, g_j, H_jj, lambda*d)
-			update_Ax(p, p.X[j], p.X[j]+lambda*d, j)
-			p.X[j] = p.X[j] + lambda*d
+			update_Ax(p, p.X[j], p.X[j]+r*d, j)
+			p.X[j] = p.X[j] + r*d
 			if j%1000 == 0 {
 				obj_new := get_obj_lr(p)
 				fmt.Printf("    iter: %d, obj: %f\n", j, obj_new)
@@ -66,6 +67,46 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 	}
 }
 
+//ref LIBLINEAR -- A Library for Large Linear Classification
+func get_upper_bound(p *readData.Problem, dr float32, j int) float32 {
+	var upper_1 float32
+	var upper_2 float32
+	var s1 float32
+	var s2 float32
+	var s_y_1 float32
+	var s_y_0 float32 //for label -1
+	for i := 0; i < len(p.A_cols[j].Idxs); i++ {
+		sample_index := p.A_cols[j].Idxs[i]
+		s1 = s1 + p.A_cols[j].Values[i]/(1.0+float32(math.Exp(float64(p.Ax[sample_index]))))
+		s2 = s2 + p.A_cols[j].Values[i]/(1.0+float32(math.Exp(float64(-p.Ax[sample_index]))))
+		if p.Labels[sample_index] == 1 {
+			s_y_1 = s_y_1 + p.A_cols[j].Values[i]
+		} else {
+			s_y_0 = s_y_1 + p.A_cols[j].Values[i]
+		}
+	}
+	s1 = s1 / float32(p.L)
+	s1 = s1 * float32(math.Exp(float64(-dr*p.Xj_max[j]))-1.0)
+	s1 = s1 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
+	upper_1 = float32(p.Size) / float32(p.L) * float32(math.Log(float64(1.0+s1)))
+	s_y_0 = dr*s_y_0/float32(p.L) + p.Lambda*(float32(math.Abs(float64(p.X[j]+dr))-math.Abs(float64(p.X[j]))))
+	upper_1 = upper_1 + s_y_0
+
+	s2 = s2 / float32(p.L)
+	s2 = s2 * float32(math.Exp(float64(dr*p.Xj_max[j]))-1.0)
+	s1 = s1 / p.Xj_max[j] * float32(p.Size) / float32(p.L)
+	upper_2 = float32(p.Size) / float32(p.L) * float32(math.Log(float64(1.0+s1)))
+	s_y_1 = -dr*s_y_1/float32(p.L) + p.Lambda*(float32(math.Abs(float64(p.X[j]+dr))-math.Abs(float64(p.X[j]))))
+	upper_2 = upper_2 + s_y_1
+
+	if upper_1 < upper_2 {
+		return upper_1
+	} else {
+		return upper_2
+	}
+}
+
+//very expensive
 func get_obj_with_d(p *readData.Problem, d float32, j int, r float32) float32 {
 	//update p.Ax
 	xj_backup := p.X[j]

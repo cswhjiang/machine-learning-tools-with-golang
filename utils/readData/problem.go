@@ -174,7 +174,7 @@ type Problem struct {
 	Ax     []float32      //Ax =A*x
 	X      []float32      //parameter
 	//	b    float32 // do not consider bias term for now
-	Size int // number of nodes(non-zero elements)
+	Size int // number of nodes(non-zero elements) in A
 
 	Max_iter int
 	Lambda   float32
@@ -182,6 +182,9 @@ type Problem struct {
 
 	IsClassification bool // true if it is a classification problem
 	NumClass         int  //only defined if isClassification == true
+
+	//for l1-lr
+	Xj_max []float32 //max value for each feature
 }
 
 func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool, row_element_array []int, col_element_array []int) {
@@ -192,6 +195,7 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	p.A_rows = make([]SparseVector, num_sample)
 	p.Ax = make([]float32, num_sample)
 	p.X = make([]float32, num_feature)
+	p.Xj_max = make([]float32, num_feature)
 	p.Labels = make([]int, num_sample)
 	p.Max_iter = 100
 	p.Lambda = 0.0000001
@@ -208,11 +212,17 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	}
 }
 
-func (p *Problem) addNode(y int, sample_index int, feature_index int, value float32, row_position int, col_position int) {
-	//	fmt.Printf("add node: %d %d %f\n", sample_index, feature_index, value)
+func (p *Problem) addNode_of_label(y int, sample_index int) {
 	p.Labels[sample_index] = y
+}
+func (p *Problem) addNode_of_A(sample_index int, feature_index int, value float32, row_position int, col_position int) {
+	//	fmt.Printf("add node: %d %d %f\n", sample_index, feature_index, value)
+	//	p.Labels[sample_index] = y
 	p.A_cols[feature_index].add_element(sample_index, value, col_position)
 	p.A_rows[sample_index].add_element(feature_index, value, row_position)
+	if value > p.Xj_max[feature_index] {
+		p.Xj_max[feature_index] = value
+	}
 	p.Size = p.Size + 1
 }
 
