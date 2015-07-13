@@ -98,12 +98,6 @@ func Solve_lr_new_glmnet_cdn(p *readData.Problem, sigma float32, lambda float32)
 
 			update_Ax(p, p.X[j], p.X[j]+r*d, j)
 			p.X[j] = p.X[j] + r*d
-			//			if j%1000 == 0 {
-			//				//				fmt.Printf("j: %d    g_j = %f, H_jj = %f, d=%f\n", j, g_j, H_jj, lambda*d)
-			//				obj_new := get_obj_lr(p)
-			//				fmt.Printf("    iter: %d, obj: %f\n", j, obj_new)
-			//			}
-
 		}
 
 		obj_new := get_obj_lr(p)
@@ -157,7 +151,7 @@ func get_upper_bound(p *readData.Problem, dr float32, j int) float32 {
 	}
 }
 
-//very expensive
+//for line search, very expensive
 func get_obj_with_d(p *readData.Problem, d float32, j int, r float32) float32 {
 	//update p.Ax
 	xj_backup := p.X[j]
@@ -180,6 +174,7 @@ func update_d(g_j float32, H_jj float32, xj float32, lambda float32) (d float32)
 	}
 	return d
 }
+
 func get_g_j_and_H_jj(p *readData.Problem, j int) (float32, float32) {
 	var g_j float32
 	var H_jj float32
