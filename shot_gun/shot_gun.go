@@ -3,13 +3,12 @@
 Usage: ./shot_gun
 	 -train 	trianing set in libsvm format
 	 -test  test set in libsvm format
-	 -o output file name (will contain solution vector x, default is x.mtx)
 	 -a algorithm (1=lasso, 2=logitic regresion, 3 = find min lambda for all zero solution)
 	 -t convergence threshold (default 1e-5)
 	 -k solution path length (for lasso)
-	 -i  max_iter (default 100)
+	 -i max_iter (default 100)
 	 -n num_threads (default 2)
-	 -lambda lambda - positive weight constant (default 1)
+	 -lambda positive weight constant (default 0.000001)
 	 -V verbose: 1=verbose, 0=quiet (default 0) 
 */
 package main
@@ -17,7 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/cswhjiang/machine-learning-tools-with-golang/logistic_regression/solver"
+//	"github.com/cswhjiang/machine-learning-tools-with-golang/logistic_regression/solver"
 	//	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	"log"
@@ -33,9 +32,13 @@ func main() {
 	var train_file_name string
 	var test_file_name string
 	var lambda float64
+	var alg_type int
+	
 	flag.StringVar(&train_file_name, "train", "", "training file (libsvm format)")
 	flag.StringVar(&test_file_name, "test", "", "testing file (libsvm format)")
-	flag.Float64Var(&lambda, "lambda", 0.000001, "trade-off parameter")
+	flag.Float64Var(&lambda, "lambda", 0.000001, "positive weight constant (default 0.000001)")
+	flag.IntVar(&alg_type, "a", 1, "algorithm (1=lasso, 2=logitic regresion, 3 = find min lambda for all zero solution)")
+	
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	if len(os.Args) <= 3 {
@@ -66,13 +69,20 @@ func main() {
 	p.Epsilon = 0.001
 
 	start = time.Now()
-	//	solver.Solve_lr_CD(p) // glmnet method
 	var sigma float32
 	var r float32
 	sigma = 0.8
 	r = 0.8
 	
-	
+	if alg_type == 1{
+		
+	}else if alg_type == 2{
+		
+	}else if alg_type == 3{
+		
+	}else{
+		//error
+	}
 	
 	
 	
