@@ -1,0 +1,1 @@
+A golang implementation of Shot Gun (https://github.com/akyrola/shotgun)

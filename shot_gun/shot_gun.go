@@ -1,4 +1,17 @@
-// logistic_regression
+// shot gun
+/*
+Usage: ./shot_gun
+	 -train 	trianing set in libsvm format
+	 -test  test set in libsvm format
+	 -o output file name (will contain solution vector x, default is x.mtx)
+	 -a algorithm (1=lasso, 2=logitic regresion, 3 = find min lambda for all zero solution)
+	 -t convergence threshold (default 1e-5)
+	 -k solution path length (for lasso)
+	 -i  max_iter (default 100)
+	 -n num_threads (default 2)
+	 -lambda lambda - positive weight constant (default 1)
+	 -V verbose: 1=verbose, 0=quiet (default 0) 
+*/
 package main
 
 import (
@@ -58,7 +71,12 @@ func main() {
 	var r float32
 	sigma = 0.8
 	r = 0.8
-	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET, can be speeded up by using more tricks
+	
+	
+	
+	
+	
+//	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET, can be speeded up by using more tricks
 	elapsed = time.Since(start)
 	fmt.Printf("took %s to train \n", elapsed)
 
@@ -70,18 +88,4 @@ func main() {
 	fmt.Printf("acc: %f\n", loss_test)
 	elapsed = time.Since(start)
 	fmt.Printf("took %s to test \n", elapsed)
-}
-
-func get_acc(p *readData.Problem) float32 {
-	var acc float32
-	acc = 0
-	for i := 0; i < p.L; i++ {
-		pred := p.A_rows[i].Multiply_dense_array(p.X)
-		//		pred := p.Ax[i]
-		if float32(p.Labels[i])*pred > 0 {
-			acc = acc + 1.0
-		}
-	}
-	acc = acc / float32(p.L) * 100.0
-	return acc
 }
