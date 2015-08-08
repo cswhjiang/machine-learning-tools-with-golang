@@ -9,15 +9,16 @@ Usage: ./shot_gun
 	 -i max_iter (default 100)
 	 -n num_threads (default 2)
 	 -lambda positive weight constant (default 0.000001)
-	 -V verbose: 1=verbose, 0=quiet (default 0) 
+	 -V verbose: 1=verbose, 0=quiet (default 0)
 */
 package main
 
 import (
 	"flag"
 	"fmt"
-//	"github.com/cswhjiang/machine-learning-tools-with-golang/logistic_regression/solver"
+	//	"github.com/cswhjiang/machine-learning-tools-with-golang/logistic_regression/solver"
 	//	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOperator"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/shot_gun/solver"
 	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/readData"
 	"log"
 	//	"math"
@@ -33,12 +34,12 @@ func main() {
 	var test_file_name string
 	var lambda float64
 	var alg_type int
-	
+
 	flag.StringVar(&train_file_name, "train", "", "training file (libsvm format)")
 	flag.StringVar(&test_file_name, "test", "", "testing file (libsvm format)")
 	flag.Float64Var(&lambda, "lambda", 0.000001, "positive weight constant (default 0.000001)")
 	flag.IntVar(&alg_type, "a", 1, "algorithm (1=lasso, 2=logitic regresion, 3 = find min lambda for all zero solution)")
-	
+
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 	if len(os.Args) <= 3 {
@@ -61,6 +62,7 @@ func main() {
 	start := time.Now()
 
 	p, _ := readData.ReadData(train_file_name, true)
+	readData.FeatureNormalize(p) //normalize feature
 	elapsed := time.Since(start)
 	fmt.Printf("took %s to read data \n", elapsed)
 
@@ -69,33 +71,27 @@ func main() {
 	p.Epsilon = 0.001
 
 	start = time.Now()
-	var sigma float32
-	var r float32
-	sigma = 0.8
-	r = 0.8
-	
-	if alg_type == 1{
-		
-	}else if alg_type == 2{
-		
-	}else if alg_type == 3{
-		
-	}else{
+
+	if alg_type == 1 {
+		solver.Solve_lasso_with_scd(p)
+	} else if alg_type == 2 {
+
+	} else if alg_type == 3 {
+
+	} else {
 		//error
 	}
-	
-	
-	
-//	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET, can be speeded up by using more tricks
+
+	//	solver.Solve_lr_new_glmnet_cdn(p, sigma, r) //newGLMNET, can be speeded up by using more tricks
 	elapsed = time.Since(start)
 	fmt.Printf("took %s to train \n", elapsed)
 
 	start = time.Now()
-	p_test, _ := readData.ReadData(train_file_name, true)
-	p_test.X = p.X
-	fmt.Printf("testing... ")
-	loss_test := get_acc(p_test)
-	fmt.Printf("acc: %f\n", loss_test)
-	elapsed = time.Since(start)
-	fmt.Printf("took %s to test \n", elapsed)
+	//	p_test, _ := readData.ReadData(train_file_name, true)
+	//	p_test.X = p.X
+	//	fmt.Printf("testing... ")
+	//	loss_test := get_acc(p_test)
+	//	fmt.Printf("acc: %f\n", loss_test)
+	//	elapsed = time.Since(start)
+	//	fmt.Printf("took %s to test \n", elapsed)
 }

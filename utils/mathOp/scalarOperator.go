@@ -19,3 +19,7 @@ func Exp(a float32) float32 {
 func Log(a float32) float32 {
 	return float32(math.Log(float64(a)))
 }
+
+func Sqrt(a float32) float32 {
+	return float32(math.Sqrt(float64(a)))
+}

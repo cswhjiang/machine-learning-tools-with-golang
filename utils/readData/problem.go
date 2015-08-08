@@ -2,6 +2,7 @@ package readData
 
 import (
 	"fmt"
+	"github.com/cswhjiang/machine-learning-tools-with-golang/utils/mathOp"
 	"os"
 )
 
@@ -84,10 +85,17 @@ func (sv *SparseVector) add_element(index int, value float32, position int) {
 	//	sv.nnz = sv.nnz + 1
 }
 
-// v =  v+a
+// v_i =  v_i+a
 func (v *SparseVector) Add_scalar(a float32) {
 	for i := 0; i < len(v.Values); i++ {
 		v.Values[i] = v.Values[i] + a
+	}
+}
+
+// v_i =  v_i*a
+func (v *SparseVector) Mul_scalar(a float32) {
+	for i := 0; i < len(v.Values); i++ {
+		v.Values[i] = v.Values[i] * a
 	}
 }
 
@@ -107,6 +115,26 @@ func (v *SparseVector) Multiply_scalar(a float32) {
 	}
 }
 
+// return v^T*v
+func (v *SparseVector) Norm_square() float32 {
+	var r float32
+	r = 0
+	for i := 0; i < len(v.Idxs); i++ {
+		r = r + v.Values[i]*v.Values[i]
+	}
+	return r
+}
+
+// return |v|_2
+func (v *SparseVector) Norm() float32 {
+	var r float32
+	r = 0
+	for i := 0; i < len(v.Idxs); i++ {
+		r = r + v.Values[i]*v.Values[i]
+	}
+	return mathOp.Sqrt(r)
+}
+
 //r = v^T a
 func (v *SparseVector) Multiply_sparse_vector(a *SparseVector) float32 {
 	var r float32
@@ -123,6 +151,16 @@ func (v *SparseVector) Multiply_sparse_vector(a *SparseVector) float32 {
 		} else {
 			i++
 		}
+	}
+	return r
+}
+
+func (v *SparseVector) Multiply_dense_int_array(a []int) float32 {
+	var r float32
+	r = 0
+
+	for i := 0; i < len(v.Values); i++ {
+		r = r + v.Values[i]*float32(a[v.Idxs[i]])
 	}
 	return r
 }
@@ -169,7 +207,7 @@ type Problem struct {
 	L      int            // number of samples
 	N      int            //number of feature
 	Labels []int          //label
-	A_rows []SparseVector //rows
+	A_rows []SparseVector //rows, each row is a sample
 	A_cols []SparseVector //columns. Redundant.
 	Ax     []float32      //Ax =A*x
 	X      []float32      //parameter
@@ -184,7 +222,10 @@ type Problem struct {
 	NumClass         int  //only defined if isClassification == true
 
 	//for l1-lr
-	Xj_max []float32 //max value for each feature
+	Xj_max             []float32 //max value for each feature
+	Feature_normalized bool      //whether normlize each feature to have unit length, default false
+	Sample_normalized  bool      //whether normlize each sample to have unit length, default false
+	Feature_centered   bool      //whether center each feature, default false
 }
 
 func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool, row_element_array []int, col_element_array []int) {
@@ -202,6 +243,9 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	p.Epsilon = 0.001
 	p.IsClassification = isClassification
 	p.NumClass = 2 //we consider binary classifition by default
+	p.Feature_normalized = false
+	p.Feature_normalized = false
+	p.Feature_centered = false
 
 	// reserve space for A_cols and A_rows
 	for i := 0; i < len(row_element_array); i++ {

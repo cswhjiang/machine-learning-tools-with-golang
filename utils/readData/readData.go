@@ -108,6 +108,26 @@ func ReadData(fileName string, isClassification bool) (*Problem, error) { //fast
 	return prob, nil
 }
 
+// not centered
+func FeatureNormalize(p *Problem) {
+	p.Feature_normalized = true
+	for i := 0; i < p.N; i++ {
+		H_ii := p.A_cols[i].Norm()
+		p.A_cols[i].Mul_scalar(float32(1.0) / H_ii)
+	}
+}
+
+func SampleNormalize(p *Problem) {
+	p.Sample_normalized = true
+	for i := 0; i < p.L; i++ {
+		H_ii := p.A_rows[i].Norm()
+		p.A_rows[i].Mul_scalar(float32(1.0) / H_ii)
+	}
+}
+
+//func FeatureCentering(p *Problem) {
+//}
+
 //func ReadData2(filename string) {
 //	f, err := os.Open(filename)
 //	if err != nil {
