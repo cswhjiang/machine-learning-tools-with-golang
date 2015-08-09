@@ -104,6 +104,9 @@ func ReadData(fileName string, isClassification bool) (*Problem, error) { //fast
 
 		sample_index++
 	}
+	for i := 0; i < prob.N; i++ {
+		prob.ATy[i] = prob.A_cols[i].Multiply_dense_int_array(prob.Labels)
+	}
 	//	fmt.Printf("min feature index:%d \n", min_feature_index)
 	return prob, nil
 }

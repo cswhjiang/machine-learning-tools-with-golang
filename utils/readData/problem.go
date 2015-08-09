@@ -210,6 +210,7 @@ type Problem struct {
 	A_rows []SparseVector //rows, each row is a sample
 	A_cols []SparseVector //columns. Redundant.
 	Ax     []float32      //Ax =A*x
+	ATy    []float32      //ATyx =A^T*y
 	X      []float32      //parameter
 	//	b    float32 // do not consider bias term for now
 	Size int // number of nodes(non-zero elements) in A
@@ -235,6 +236,7 @@ func (p *Problem) reserve(num_sample int, num_feature int, isClassification bool
 	p.A_cols = make([]SparseVector, num_feature)
 	p.A_rows = make([]SparseVector, num_sample)
 	p.Ax = make([]float32, num_sample)
+	p.ATy = make([]float32, num_feature)
 	p.X = make([]float32, num_feature)
 	p.Xj_max = make([]float32, num_feature)
 	p.Labels = make([]int, num_sample)

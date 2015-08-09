@@ -37,16 +37,16 @@ func main() {
 
 	flag.StringVar(&train_file_name, "train", "", "training file (libsvm format)")
 	flag.StringVar(&test_file_name, "test", "", "testing file (libsvm format)")
-	flag.Float64Var(&lambda, "lambda", 0.000001, "positive weight constant (default 0.000001)")
+	flag.Float64Var(&lambda, "lambda", 0.0000001, "positive weight constant (default 0.000001)")
 	flag.IntVar(&alg_type, "a", 1, "algorithm (1=lasso, 2=logitic regresion, 3 = find min lambda for all zero solution)")
 
 	var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
-	if len(os.Args) <= 3 {
-		fmt.Printf("Usage: \n")
-		flag.PrintDefaults()
-		os.Exit(0)
-	}
+	//	if len(os.Args) <= 3 {
+	//		fmt.Printf("Usage: \n")
+	//		flag.PrintDefaults()
+	//		os.Exit(0)
+	//	}
 	flag.Parse()
 
 	//for profiling
@@ -61,14 +61,18 @@ func main() {
 
 	start := time.Now()
 
+	train_file_name = "/home/jwh/dataset/rcv1/rcv1_train.binary"
+	alg_type = 1
 	p, _ := readData.ReadData(train_file_name, true)
 	readData.FeatureNormalize(p) //normalize feature
+
 	elapsed := time.Since(start)
 	fmt.Printf("took %s to read data \n", elapsed)
 
 	p.PrintProblem()
 	p.Lambda = float32(lambda)
-	p.Epsilon = 0.001
+	p.Epsilon = 0.00001
+	p.Max_iter = 5000
 
 	start = time.Now()
 

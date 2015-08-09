@@ -125,6 +125,7 @@ func solve_lasso_CD(p *readData.Problem) {
 	}
 	//	fmt.Printf("%v ", fea_square)
 	obj_old := get_obj(p)
+	fmt.Printf("obj: %f\n", obj_old)
 	var iter int
 	for iter = 1; iter < p.Max_iter; iter++ {
 		for n := 0; n < p.N; n++ {
